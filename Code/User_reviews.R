@@ -64,4 +64,4 @@ df %<>%
 
 
 # Write data frame
-write_csv(df, "Code/users_reviews.csv")
+write_csv(df, "Processed_data/users_reviews.csv")

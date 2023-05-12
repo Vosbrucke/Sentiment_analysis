@@ -56,7 +56,9 @@ review_critics_w_url <- read_html(html) %>%
 # Make a data frame. Filter PLAY magazine as they do not provide link on the metacritic website to the review
 df_critics_ratings <- data.frame(
   htmls = review_htmls, 
-  critics = review_critics_w_url, ratings = df_review %>% filter(review_critics != "PLAY") %>% pull(review_ratings))
+  critics = review_critics_w_url, 
+  ratings = df_review %>% filter(review_critics != "PLAY") %>% pull(review_ratings)
+  )
 
 
 # Filter for websites with british, american domain
@@ -64,7 +66,8 @@ df_critics_ratings %<>%
   filter(
     htmls %in% c(str_subset(htmls, "com/"), 
                  str_subset(htmls, "net/"), 
-                 str_subset(htmls, "co.uk/")))
+                 str_subset(htmls, "co.uk/"))
+    )
 
 
 # Read reviews
@@ -87,7 +90,8 @@ function_bow <- function(i) {
   review_htmls_1[i] %>% 
     bow(delay = 5, force = TRUE) %>% 
     scrape() %>% 
-    html_elements("p") %>% html_text2() %>% 
+    html_elements("p") %>% 
+    html_text2() %>% 
     str_subset(., ".+")
 }
 
@@ -122,7 +126,7 @@ df %<>%
   cbind(data.frame(url = review_htmls_1)) %>% 
   # Join with df_critics_ratings data frame to look at ratings, critics, count per review etc
   left_join(df_critics_ratings, by = c("url" = "htmls")) %>% 
-  # Filter 
+  # Filter for reviews that could not have been webscraped
   filter(V_1 != "FALSE")
 
 
@@ -141,14 +145,16 @@ stopwords <- c("gas station simulator|nintendo switch|riot games|email|crazyaeja
 # Delete wrong lines 
 df %<>% 
   pivot_longer(cols = V_1:V_40) %>% 
-  mutate(count = str_count(value),
-         value = tolower(value)) %>% 
+  mutate(
+    count = str_count(value),
+    value = tolower(value)
+    ) %>% 
   filter(!count < 70) %>% 
   arrange(desc(count)) %>% 
   # # What stopwords should be added or changed
   # filter(str_detect(value, "more :"))
-  filter(!str_detect(value, 
-                     stopwords)) 
+  filter(!str_detect(value,
+                     stopwords))
   # # Check if the lines were correctly identified as non-reviews
   # filter(str_detect(value,
   #                    stopwords)) %>%
@@ -161,7 +167,7 @@ df %<>%
   select(-count) %>%
   pivot_wider(values_from = value, names_from = name) %>% 
   arrange(rowid) %>% 
-  select(rowid, url, critics, ratings, paste0("V_", 1:39)) %>% 
+  select(rowid, url, critics, ratings, paste0("V_", 1:40)) %>% 
   group_by(rowid) %>% 
   replace(is.na(.), "") %>% 
   mutate(full_text = paste(across(contains("V_")), collapse = " ")) %>% 
